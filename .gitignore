@@ -1,1 +1,37 @@
+# Local OS files
+.DS_Store
+Thumbs.db
+
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# IDE/editor local settings
+.vscode/
+.idea/
+
+# Local data, runs, and model artifacts
 /test/
+data/
+datasets/
+outputs/
+runs/
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+
+# Nested repository metadata
+**/.git/
