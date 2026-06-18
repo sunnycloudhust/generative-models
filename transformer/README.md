@@ -12,7 +12,7 @@ The code is organized as a learning project: each Transformer component lives in
 ├── train.py                 # Model builder, train loop, validation loop, checkpoint saving
 ├── test.py                  # Load checkpoint and translate a sentence
 ├── dataset.py               # Tokenizer, vocab, dataset loader, collate function
-├── config.json              # Default config for the 10k training run
+├── config.json              # Default config for the full dataset training run
 ├── model/
 │   ├── transformer.py       # Full Transformer wrapper
 │   ├── encoder_decoder.py   # Encoder-decoder stack
@@ -50,7 +50,7 @@ data/en_vi_ted2020_10k.tsv
 data/en_vi_ted2020.tsv
 ```
 
-Use the 10k file first to check that the pipeline works.
+Use the full file for the default training config. The 10k file is useful for quick smoke tests.
 
 ## Setup
 
@@ -64,7 +64,7 @@ If you use CUDA, install the PyTorch build matching your CUDA version from the o
 
 ## Train
 
-Quick smoke test on 10k sentence pairs:
+Train with the default full-dataset config:
 
 ```bash
 python3 main.py
@@ -116,15 +116,11 @@ Enable W&B in `config.json`:
 }
 ```
 
-When enabled, the training loop logs:
+When enabled, the training loop logs loss only:
 
 ```text
 train/loss
-valid/loss
-valid/ppl
-best/valid_loss
-sample/en
-sample/vi
+val/loss
 ```
 
 Train on the full TED2020 dataset:
@@ -142,10 +138,10 @@ Train on the full TED2020 dataset:
 }
 ```
 
-With the default 10k config, the best checkpoint is saved to:
+With the default full-dataset config, the best checkpoint is saved to:
 
 ```text
-checkpoints/en_vi_transformer_10k.pt
+checkpoints/en_vi_transformer_full.pt
 ```
 
 ## Translate

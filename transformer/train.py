@@ -1,4 +1,3 @@
-import math
 import random
 from pathlib import Path
 
@@ -14,7 +13,6 @@ from model.encoder_decoder import EncoderDecoder
 from model.preprocess import Preprocess
 from model.self_attention import SelfAttention
 from model.transformer import Transformer
-from test import greedy_translate
 
 
 def build_model(
@@ -105,7 +103,7 @@ def evaluate_loss(model, dataloader, criterion, device):
     return total_loss / max(len(dataloader), 1)
 
 
-def save_checkpoint(path, model, optimizer, src_vocab, tgt_vocab, config, epoch, valid_loss):
+def save_checkpoint(path, model, optimizer, src_vocab, tgt_vocab, config, epoch, val_loss):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(
@@ -116,7 +114,7 @@ def save_checkpoint(path, model, optimizer, src_vocab, tgt_vocab, config, epoch,
             "tgt_vocab": tgt_vocab.itos,
             "config": config,
             "epoch": epoch,
-            "valid_loss": valid_loss,
+            "val_loss": val_loss,
         },
         path
     )
@@ -237,8 +235,7 @@ def run_training(args):
     config["actual_tgt_vocab_size"] = len(tgt_vocab)
     config["device"] = str(device)
 
-    best_valid_loss = math.inf
-    sample_sentence = valid_pairs[0][0] if valid_pairs else train_pairs[0][0]
+    best_val_loss = float("inf")
     wandb_run = init_wandb(args, config, model)
 
     print(f"device: {device}")
@@ -254,19 +251,16 @@ def run_training(args):
             device,
             args.grad_clip
         )
-        valid_loss = evaluate_loss(model, valid_loader, criterion, device)
-        ppl = math.exp(min(valid_loss, 20))
+        val_loss = evaluate_loss(model, valid_loader, criterion, device)
 
         print(
             f"epoch {epoch:02d} | "
             f"train_loss {train_loss:.4f} | "
-            f"valid_loss {valid_loss:.4f} | "
-            f"valid_ppl {ppl:.2f}"
+            f"val_loss {val_loss:.4f}"
         )
 
-        if valid_loss < best_valid_loss:
-            best_valid_loss = valid_loss
-            checkpoint_saved = True
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
             save_checkpoint(
                 args.checkpoint,
                 model,
@@ -275,27 +269,16 @@ def run_training(args):
                 tgt_vocab,
                 config,
                 epoch,
-                valid_loss
+                val_loss
             )
             print(f"saved checkpoint: {args.checkpoint}")
-        else:
-            checkpoint_saved = False
-
-        print(f"sample en: {sample_sentence}")
-        sample_translation = greedy_translate(model, sample_sentence, src_vocab, tgt_vocab, device)
-        print(f"sample vi: {sample_translation}")
 
         if wandb_run is not None:
             wandb_run.log(
                 {
                     "epoch": epoch,
                     "train/loss": train_loss,
-                    "valid/loss": valid_loss,
-                    "valid/ppl": ppl,
-                    "best/valid_loss": best_valid_loss,
-                    "checkpoint_saved": checkpoint_saved,
-                    "sample/en": sample_sentence,
-                    "sample/vi": sample_translation,
+                    "val/loss": val_loss,
                 },
                 step=epoch
             )
