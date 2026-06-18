@@ -122,6 +122,39 @@ def save_checkpoint(path, model, optimizer, src_vocab, tgt_vocab, config, epoch,
     )
 
 
+def init_wandb(args, config, model):
+    if not getattr(args, "use_wandb", False):
+        return None
+
+    try:
+        import wandb
+    except ImportError as exc:
+        raise ImportError("W&B is enabled. Install it with: pip install wandb") from exc
+
+    init_kwargs = {
+        "project": getattr(args, "wandb_project", "en-vi-transformer"),
+        "name": getattr(args, "wandb_run_name", None),
+        "config": config,
+    }
+
+    wandb_entity = getattr(args, "wandb_entity", None)
+    wandb_mode = getattr(args, "wandb_mode", None)
+    if wandb_entity:
+        init_kwargs["entity"] = wandb_entity
+    if wandb_mode:
+        init_kwargs["mode"] = wandb_mode
+
+    run = wandb.init(**init_kwargs)
+    if getattr(args, "wandb_watch", False):
+        wandb.watch(
+            model,
+            log="gradients",
+            log_freq=getattr(args, "wandb_log_freq", 100)
+        )
+
+    return run
+
+
 def prepare_dataloaders(args):
     pairs = load_parallel_data(args.train_path, args.src_col, args.tgt_col)
     if not pairs:
@@ -202,9 +235,11 @@ def run_training(args):
     config = vars(args).copy()
     config["actual_src_vocab_size"] = len(src_vocab)
     config["actual_tgt_vocab_size"] = len(tgt_vocab)
+    config["device"] = str(device)
 
     best_valid_loss = math.inf
     sample_sentence = valid_pairs[0][0] if valid_pairs else train_pairs[0][0]
+    wandb_run = init_wandb(args, config, model)
 
     print(f"device: {device}")
     print(f"train pairs: {len(train_pairs)} | valid pairs: {len(valid_pairs)}")
@@ -231,6 +266,7 @@ def run_training(args):
 
         if valid_loss < best_valid_loss:
             best_valid_loss = valid_loss
+            checkpoint_saved = True
             save_checkpoint(
                 args.checkpoint,
                 model,
@@ -242,8 +278,29 @@ def run_training(args):
                 valid_loss
             )
             print(f"saved checkpoint: {args.checkpoint}")
+        else:
+            checkpoint_saved = False
 
         print(f"sample en: {sample_sentence}")
-        print(f"sample vi: {greedy_translate(model, sample_sentence, src_vocab, tgt_vocab, device)}")
+        sample_translation = greedy_translate(model, sample_sentence, src_vocab, tgt_vocab, device)
+        print(f"sample vi: {sample_translation}")
+
+        if wandb_run is not None:
+            wandb_run.log(
+                {
+                    "epoch": epoch,
+                    "train/loss": train_loss,
+                    "valid/loss": valid_loss,
+                    "valid/ppl": ppl,
+                    "best/valid_loss": best_valid_loss,
+                    "checkpoint_saved": checkpoint_saved,
+                    "sample/en": sample_sentence,
+                    "sample/vi": sample_translation,
+                },
+                step=epoch
+            )
+
+    if wandb_run is not None:
+        wandb_run.finish()
 
     return model, src_vocab, tgt_vocab

@@ -12,6 +12,7 @@ The code is organized as a learning project: each Transformer component lives in
 ├── train.py                 # Model builder, train loop, validation loop, checkpoint saving
 ├── test.py                  # Load checkpoint and translate a sentence
 ├── dataset.py               # Tokenizer, vocab, dataset loader, collate function
+├── config.json              # Default config for the 10k training run
 ├── model/
 │   ├── transformer.py       # Full Transformer wrapper
 │   ├── encoder_decoder.py   # Encoder-decoder stack
@@ -66,37 +67,85 @@ If you use CUDA, install the PyTorch build matching your CUDA version from the o
 Quick smoke test on 10k sentence pairs:
 
 ```bash
-python3 main.py \
-  --train-path data/en_vi_ted2020_10k.tsv \
-  --min-freq 1 \
-  --d-model 128 \
-  --d-embed 128 \
-  --d-ff 512 \
-  --num-head 4 \
-  --num-layer 2 \
-  --batch-size 16 \
-  --epochs 5
+python3 main.py
+```
+
+By default, `main.py` reads:
+
+```text
+config.json
+```
+
+Change the number of epochs in that config file:
+
+```json
+{
+  "epochs": 5
+}
+```
+
+You can also pass another config file:
+
+```bash
+python3 main.py --config config.json
+```
+
+## W&B Logging
+
+Weights & Biases logging is optional and disabled by default.
+
+Install it:
+
+```bash
+pip install wandb
+```
+
+Login once:
+
+```bash
+wandb login
+```
+
+Enable W&B in `config.json`:
+
+```json
+{
+  "use_wandb": true,
+  "wandb_project": "en-vi-transformer",
+  "wandb_run_name": "train-10k"
+}
+```
+
+When enabled, the training loop logs:
+
+```text
+train/loss
+valid/loss
+valid/ppl
+best/valid_loss
+sample/en
+sample/vi
 ```
 
 Train on the full TED2020 dataset:
 
-```bash
-python3 main.py \
-  --train-path data/en_vi_ted2020.tsv \
-  --min-freq 2 \
-  --d-model 256 \
-  --d-embed 256 \
-  --d-ff 1024 \
-  --num-head 8 \
-  --num-layer 4 \
-  --batch-size 32 \
-  --epochs 10
+```json
+{
+  "train_path": "data/en_vi_ted2020.tsv",
+  "epochs": 10,
+  "d_model": 256,
+  "d_embed": 256,
+  "d_ff": 1024,
+  "num_head": 8,
+  "num_layer": 4,
+  "batch_size": 32
+}
 ```
 
-By default, the best checkpoint is saved to:
+With the default 10k config, the best checkpoint is saved to:
 
 ```text
-checkpoints/en_vi_transformer.pt
+checkpoints/en_vi_transformer_10k.pt
 ```
 
 ## Translate
@@ -109,26 +158,32 @@ python3 test.py \
   --sentence "I love machine learning"
 ```
 
-## Important Arguments
+## Important Config Fields
 
 ```text
---train-path        Path to train data
---valid-path        Optional validation file
---valid-ratio       Validation split ratio if no valid file is given
---max-src-len       Max English sequence length
---max-tgt-len       Max Vietnamese sequence length
---src-vocab-size    Max English vocabulary size
---tgt-vocab-size    Max Vietnamese vocabulary size
---min-freq          Minimum token frequency kept in vocab
---d-model           Transformer hidden size
---d-embed           Embedding size before projection to d_model
---d-ff              Feed-forward hidden size
---num-head          Number of attention heads
---num-layer         Number of encoder/decoder layers
---batch-size        Batch size
---epochs            Number of training epochs
---lr                Learning rate
---checkpoint        Path to save the best checkpoint
+train_path        Path to train data
+valid_path        Optional validation file
+valid_ratio       Validation split ratio if no valid file is given
+max_src_len       Max English sequence length
+max_tgt_len       Max Vietnamese sequence length
+src_vocab_size    Max English vocabulary size
+tgt_vocab_size    Max Vietnamese vocabulary size
+min_freq          Minimum token frequency kept in vocab
+d_model           Transformer hidden size
+d_embed           Embedding size before projection to d_model
+d_ff              Feed-forward hidden size
+num_head          Number of attention heads
+num_layer         Number of encoder/decoder layers
+batch_size        Batch size
+epochs            Number of training epochs
+lr                Learning rate
+checkpoint        Path to save the best checkpoint
+use_wandb         Enable or disable W&B logging
+wandb_project     W&B project name
+wandb_entity      Optional W&B team/user entity
+wandb_run_name    Optional run name
+wandb_mode        Optional W&B mode, e.g. offline
+wandb_watch       Log gradients with wandb.watch
 ```
 
 ## Current Limitations
