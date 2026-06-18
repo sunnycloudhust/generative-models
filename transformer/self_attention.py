@@ -17,7 +17,7 @@ class SelfAttention(nn.Module):
     
     def forward(self, x, mask=None):
         batch_size, seq_len, d_model = x.shape
-        q,k,v = torch.split(self.linear(x), self.d_model, dim=1)
+        q,k,v = torch.split(self.w_qkv(x), self.d_model, dim=1)
         
         q = q.view(batch_size, seq_len, self.num_head, self.d_head).transpose(1,2) #shape(b,num,seq,d_head)
         k = k.view(batch_size, seq_len, self.num_head, self.d_head).transpose(1,2) #shape(b,num,seq,d_head)
@@ -37,8 +37,20 @@ class SelfAttention(nn.Module):
         return att_score
         
         
-        
-        
+if __name__ == '__main__':
+    vocab_size = 100
+    d_model = 100
+    seq_len = 20
+    num_head = 10
+    d_embed = 300
+    bias = True
+    batch_size = 256
+    dropout = 0.1
+    x = torch.randint(0, vocab_size, (batch_size, seq_len, d_model)).float() 
+    attention = SelfAttention(d_model=d_model, num_head=num_head, bias=True, dropout=0.1)
+    a = attention(x)
+    print(a.shape)
+
         
         
         
