@@ -21,16 +21,5 @@ env/
 # IDE/editor local settings
 .vscode/
 .idea/
-
-# Local datasets and training artifacts
-data/
-datasets/
-checkpoints/
-outputs/
 runs/
 wandb/
-
-# Model checkpoints
-*.ckpt
-*.pt
-*.pth
