@@ -14,5 +14,33 @@ class Encoder(nn.Module):
         self.bias = bias
         self.d_ff = d_ff
         self.num_head = num_head
+        self.mlp = nn.Sequential(
+            nn.Linear(self.d_model, self.d_ff, bias=bias),
+            nn.ReLU(),
+            nn.Linear(self.d_ff, self.d_model)
+        )
+        self.LayerNorm = nn.LayerNorm(d_model)
         
-    def forward(self, x, mask, )
+    def forward(self, x):
+        x = self.self_attention(x)
+        output = self.mlp(x)
+        return self.LayerNorm(x + output)
+
+
+if __name__ == '__main__':
+    vocab_size = 100000
+    d_model = 512
+    seq_len = 20
+    d_ff = 1024
+    num_head = 8
+    d_embed = 256
+    bias = True
+    batch_size = 256
+    mask = None
+    dropout = 0.1
+    x = torch.randint(0, vocab_size, (batch_size, seq_len, d_model)).float()
+    self_attention = SelfAttention(d_model, num_head, bias, dropout)
+    encoder = Encoder(self_attention, d_model, d_ff, num_head, bias, dropout)
+    output = encoder(x)
+    print(output.shape)
+    
