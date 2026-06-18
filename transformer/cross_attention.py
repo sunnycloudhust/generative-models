@@ -22,16 +22,20 @@ class CrossAttention(nn.Module):
         self.w_o = nn.Linear(d_model, d_model, bias=bias)
         
     def forward(self, x, k_state, v_state):
-        batch_size, seq_len, d_model = x.shape
-        if k_state.shape != (batch_size, seq_len, d_model) or v_state.shape != (batch_size, seq_len, d_model):
+        batch_size, tgt_seq_len, d_model = x.shape
+        if k_state.shape != v_state.shape:
             raise ValueError("Input to the Decoder has different shape")
+        if k_state.shape[0] != batch_size or k_state.shape[2] != d_model:
+            raise ValueError("Input to the Decoder has different shape")
+
+        src_seq_len = k_state.shape[1]
         k = self.w_k(k_state)
-        v = self.w_k(v_state)
+        v = self.w_v(v_state)
         q = self.w_q(x)
         
-        k = k.reshape(batch_size, seq_len, self.num_head, self.d_head).transpose(1,2)
-        q = q.reshape(batch_size, seq_len, self.num_head, self.d_head).transpose(1,2)
-        v = v.reshape(batch_size, seq_len, self.num_head, self.d_head).transpose(1,2)
+        k = k.reshape(batch_size, src_seq_len, self.num_head, self.d_head).transpose(1,2)
+        q = q.reshape(batch_size, tgt_seq_len, self.num_head, self.d_head).transpose(1,2)
+        v = v.reshape(batch_size, src_seq_len, self.num_head, self.d_head).transpose(1,2)
 
         cross_att_score = torch.matmul(q, k.transpose(-1, -2))
         cross_att_score /= self.scaling
@@ -39,7 +43,7 @@ class CrossAttention(nn.Module):
         cross_att_score = self.dropout(cross_att_score)
         cross_att_score = torch.matmul(cross_att_score, v)
         out = cross_att_score.transpose(1, 2)
-        out = out.reshape(batch_size, seq_len, self.num_head * self.d_head)
+        out = out.reshape(batch_size, tgt_seq_len, self.num_head * self.d_head)
         out = self.w_o(out)
         out = self.LayerNorm(out + x)
         return out    
@@ -60,7 +64,6 @@ if __name__ == '__main__':
 
     a = attention(x, k_state=k_state, v_state=v_state)
     print(a.shape)
-
 
 
 
