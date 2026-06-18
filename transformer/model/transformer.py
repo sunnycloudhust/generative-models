@@ -8,7 +8,6 @@ from encoder_decoder import EncoderDecoder
 from preprocess import Preprocess
 from self_attention import SelfAttention
 
-
 class Transformer(nn.Module):
     def __init__(self, src_preprocess, tgt_preprocess, encoder_decoder, d_model, tgt_vocab_size, bias=True):
         super().__init__()
@@ -18,7 +17,7 @@ class Transformer(nn.Module):
         self.output_linear = nn.Linear(d_model, tgt_vocab_size, bias=bias)
 
     @staticmethod
-    def make_tgt_mask(tgt): #create mask for masked self attention
+    def make_tgt_mask(tgt): #create mask for masked self attention has shape (tgt, tgt)
         seq_len = tgt.shape[1]
         mask = torch.triu(
             torch.ones(seq_len, seq_len, device=tgt.device),
@@ -39,7 +38,7 @@ class Transformer(nn.Module):
 
 
 if __name__ == '__main__':
-    batch_size = 4
+    batch_size = 256
     src_seq_len = 20
     tgt_seq_len = 16
     src_vocab_size = 1000
@@ -48,7 +47,7 @@ if __name__ == '__main__':
     d_embed = 256
     d_ff = 1024
     num_head = 8
-    num_layer = 2
+    num_layer = 6
     bias = True
     dropout = 0.1
 
