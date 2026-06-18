@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
-from self_attention import SelfAttention
-from cross_attention import CrossAttention
+from model.self_attention import SelfAttention
+from model.cross_attention import CrossAttention
 
 class Decoder(nn.Module):
     def __init__(self, self_attention, cross_attention, d_model, d_ff,

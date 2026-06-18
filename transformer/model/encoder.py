@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from self_attention import SelfAttention
+from model.self_attention import SelfAttention
 
 class Encoder(nn.Module):
     def __init__(self, self_attention, d_model, d_ff, num_head, 

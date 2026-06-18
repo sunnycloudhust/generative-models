@@ -2,10 +2,10 @@ import copy
 import torch
 import torch.nn as nn
 
-from cross_attention import CrossAttention
-from decoder import Decoder
-from encoder import Encoder
-from self_attention import SelfAttention
+from model.cross_attention import CrossAttention
+from model.decoder import Decoder
+from model.encoder import Encoder
+from model.self_attention import SelfAttention
 
 class EncoderDecoder(nn.Module):
     def __init__(self, encoder, decoder, num_layer):

@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
 
-from cross_attention import CrossAttention
-from decoder import Decoder
-from encoder import Encoder
-from encoder_decoder import EncoderDecoder
-from preprocess import Preprocess
-from self_attention import SelfAttention
+from model.cross_attention import CrossAttention
+from model.decoder import Decoder
+from model.encoder import Encoder
+from model.encoder_decoder import EncoderDecoder
+from model.preprocess import Preprocess
+from model.self_attention import SelfAttention
 
 class Transformer(nn.Module):
     def __init__(self, src_preprocess, tgt_preprocess, encoder_decoder, d_model, tgt_vocab_size, bias=True):
