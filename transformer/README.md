@@ -92,7 +92,8 @@ python3 main.py --config config.json
 
 ## W&B Logging
 
-Weights & Biases logging is optional and disabled by default.
+Weights & Biases logging is optional and controlled by `use_wandb` in `config.json`.
+The current config enables it for the 10k dataset run.
 
 Install it:
 
@@ -120,7 +121,12 @@ When enabled, the training loop logs loss only:
 
 ```text
 train/loss
+train/lr
 val/loss
+val/best_loss
+val/best_epoch
+time/epoch_seconds
+checkpoint/saved
 ```
 
 Train on the full TED2020 dataset:

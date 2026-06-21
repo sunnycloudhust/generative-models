@@ -1,4 +1,5 @@
 import random
+import time
 from pathlib import Path
 
 import torch
@@ -143,6 +144,12 @@ def init_wandb(args, config, model):
         init_kwargs["mode"] = wandb_mode
 
     run = wandb.init(**init_kwargs)
+    wandb.define_metric("epoch")
+    wandb.define_metric("train/*", step_metric="epoch")
+    wandb.define_metric("val/*", step_metric="epoch")
+    wandb.define_metric("time/*", step_metric="epoch")
+    wandb.define_metric("checkpoint/*", step_metric="epoch")
+
     if getattr(args, "wandb_watch", False):
         wandb.watch(
             model,
@@ -233,9 +240,12 @@ def run_training(args):
     config = vars(args).copy()
     config["actual_src_vocab_size"] = len(src_vocab)
     config["actual_tgt_vocab_size"] = len(tgt_vocab)
+    config["train_pairs"] = len(train_pairs)
+    config["valid_pairs"] = len(valid_pairs)
     config["device"] = str(device)
 
     best_val_loss = float("inf")
+    best_epoch = None
     wandb_run = init_wandb(args, config, model)
 
     print(f"device: {device}")
@@ -243,6 +253,7 @@ def run_training(args):
     print(f"src vocab: {len(src_vocab)} | tgt vocab: {len(tgt_vocab)}")
 
     for epoch in range(1, args.epochs + 1):
+        epoch_start = time.perf_counter()
         train_loss = train_one_epoch(
             model,
             train_loader,
@@ -252,15 +263,20 @@ def run_training(args):
             args.grad_clip
         )
         val_loss = evaluate_loss(model, valid_loader, criterion, device)
+        epoch_seconds = time.perf_counter() - epoch_start
+        lr = optimizer.param_groups[0]["lr"]
+        is_best = val_loss < best_val_loss
 
         print(
             f"epoch {epoch:02d} | "
             f"train_loss {train_loss:.4f} | "
-            f"val_loss {val_loss:.4f}"
+            f"val_loss {val_loss:.4f} | "
+            f"time {epoch_seconds:.1f}s"
         )
 
-        if val_loss < best_val_loss:
+        if is_best:
             best_val_loss = val_loss
+            best_epoch = epoch
             save_checkpoint(
                 args.checkpoint,
                 model,
@@ -278,10 +294,17 @@ def run_training(args):
                 {
                     "epoch": epoch,
                     "train/loss": train_loss,
+                    "train/lr": lr,
                     "val/loss": val_loss,
+                    "val/best_loss": best_val_loss,
+                    "val/best_epoch": best_epoch,
+                    "time/epoch_seconds": epoch_seconds,
+                    "checkpoint/saved": int(is_best),
                 },
                 step=epoch
             )
+            wandb_run.summary["best_val_loss"] = best_val_loss
+            wandb_run.summary["best_epoch"] = best_epoch
 
     if wandb_run is not None:
         wandb_run.finish()
