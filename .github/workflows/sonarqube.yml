@@ -1,0 +1,54 @@
+name: SonarQube Code Quality
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  sonarqube:
+    name: SonarQube Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Configure SonarQube project
+        shell: bash
+        env:
+          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
+          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+        run: |
+          project_key="${SONAR_PROJECT_KEY:-${GITHUB_REPOSITORY/\//_}}"
+
+          {
+            cat sonar-project.properties
+            echo "sonar.projectKey=${project_key}"
+            if [ -n "${SONAR_ORGANIZATION}" ]; then
+              echo "sonar.organization=${SONAR_ORGANIZATION}"
+            fi
+          } > sonar-project.ci.properties
+
+      - name: SonarQube scan
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
+        with:
+          args: >
+            -Dproject.settings=sonar-project.ci.properties
