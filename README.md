@@ -1,6 +1,6 @@
 # Generative Models
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=sunnycloudhust_generative-models&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=sunnycloudhust_generative-models)
+[![SonarQube Code Quality](https://github.com/sunnycloudhust/generative-models/actions/workflows/sonarqube.yml/badge.svg?branch=main)](https://github.com/sunnycloudhust/generative-models/actions/workflows/sonarqube.yml)
 
 This repository contains small PyTorch implementations and experiments for generative modeling.
 
