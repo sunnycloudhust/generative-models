@@ -1,5 +1,7 @@
 # Generative Models
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=sunnycloudhust_generative-models&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=sunnycloudhust_generative-models)
+
 This repository contains small PyTorch implementations and experiments for generative modeling.
 
 ## Contents
@@ -28,4 +30,3 @@ python transformer/preprocess.py
 ```
 
 The code is currently organized as learning experiments, so APIs may change as the implementations are completed.
-

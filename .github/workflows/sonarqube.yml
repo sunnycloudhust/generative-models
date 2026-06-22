@@ -33,14 +33,20 @@ jobs:
         env:
           SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL || 'https://sonarcloud.io' }}
         run: |
           project_key="${SONAR_PROJECT_KEY:-${GITHUB_REPOSITORY/\//_}}"
+          organization="${SONAR_ORGANIZATION}"
+
+          if [ -z "${organization}" ] && [[ "${SONAR_HOST_URL}" == https://sonarcloud.io* ]]; then
+            organization="${GITHUB_REPOSITORY_OWNER}"
+          fi
 
           {
             cat sonar-project.properties
             echo "sonar.projectKey=${project_key}"
-            if [ -n "${SONAR_ORGANIZATION}" ]; then
-              echo "sonar.organization=${SONAR_ORGANIZATION}"
+            if [ -n "${organization}" ]; then
+              echo "sonar.organization=${organization}"
             fi
           } > sonar-project.ci.properties
 
