@@ -30,6 +30,7 @@ class LinearNoiseScheduler:
         x0 = (xt - (self.sqrt_one_minus_alpha_cum_prod[t] * noise_pred)) / self.sqrt_alpha_cum_prod[t]
         x0 = torch.clamp(x0, -1., max=1.)
         
+        # Calculate mean of the reverse distribution
         mean = xt - ((self.betas[t] * noise_pred) / (self.sqrt_one_minus_alpha_cum_prod[t]))
         mean = mean / torch.sqrt(self.alphas[t])
         
