@@ -14,13 +14,12 @@ class LinearNoiseScheduler:
         self.sqrt_one_minus_alpha_cum_prod = torch.sqrt(1.0 - self.alpha_cum_prod)
     
     def add_noise(self, original, noise, t):
-        original_shape = original.shape
+        original_shape = original.shape        # The expected shape is batch_size, channels, height, width
         batch_size = original.shape[0]
 
         sqrt_alpha_cum_prod = self.sqrt_alpha_cum_prod[t].reshape(batch_size)  # shape (batch_size,)
         sqrt_one_minus_alpha_cum_prod = self.sqrt_one_minus_alpha_cum_prod[t].reshape(batch_size)  # shape (batch_size,)
-
-        for _ in range(len(original_shape) - 1):
+        for _ in range(len(original_shape) - 1):    # example (2,3,32,32) has len=4
             sqrt_alpha_cum_prod = sqrt_alpha_cum_prod.unsqueeze(-1)
             sqrt_one_minus_alpha_cum_prod = sqrt_one_minus_alpha_cum_prod.unsqueeze(-1)
 
@@ -43,24 +42,3 @@ class LinearNoiseScheduler:
             z = torch.randn(xt.shape).to(xt.device)
             return mean + sigma*z, x0
 
-
-
-
-
-if __name__ == "__main__":
-    scheduler = LinearNoiseScheduler(
-        num_timesteps=1000,
-        beta_start=0.0001,
-        beta_end=0.02,
-    )
-
-    original = torch.randn(2, 3, 32, 32)
-    noise = torch.randn_like(original)
-    t = torch.tensor([0, 999])
-
-    noisy = scheduler.add_noise(original, noise, t)
-
-    print("original shape:", original.shape)
-    print("noise shape:", noise.shape)
-    print("t:", t)
-    print("noisy:", noisy)
