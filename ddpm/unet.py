@@ -12,12 +12,9 @@ def get_time_embedding(time_steps, t_emd_dim):
 
     time_steps = time_steps.float()
     embeddings = time_steps[:, None] * factor[None, :]
-    embeddings = torch.cat([torch.sin(embeddings), torch.cos(embeddings)], dim=-1)
+    t_emb = torch.cat([torch.sin(embeddings), torch.cos(embeddings)], dim=-1)
 
-    if t_emd_dim % 2 == 1:
-        embeddings = torch.nn.functional.pad(embeddings, (0, 1))
-
-    return embeddings       # Expected output.shape = (batch_size, t_emd_dim)
+    return t_emb     # Expected output.shape = (batch_size, t_emd_dim)
 
 
 
