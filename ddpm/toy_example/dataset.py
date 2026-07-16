@@ -1,11 +1,11 @@
 from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms
+from model import *
 
 
 IMG_SIZE = 64
@@ -14,6 +14,8 @@ DATASET_DIR = Path("1_Liner TF")
 
 
 class FlatImageDataset(Dataset):
+    # Note: Dataset in torch.utils.data needs implementation of __len__ and __getitem__
+    
     def __init__(self, root, transform=None):
         self.root = Path(root)
         self.transform = transform
@@ -68,3 +70,5 @@ def show_tensor_image(image):
 
 data = load_transformed_dataset()
 dataloader = DataLoader(data, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+
+
