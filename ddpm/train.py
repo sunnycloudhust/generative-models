@@ -1,3 +1,4 @@
+import logging
 from pathlib import Path
 
 import torch
@@ -32,6 +33,45 @@ SAVE_INTERVAL = 5
 SAMPLE_INTERVAL = 5
 NUM_SAMPLES = 16
 SEED = 42
+
+
+def setup_logger(output_dir):
+    log_path = output_dir / "train.log"
+    logger = logging.getLogger("mnist_ddpm")
+    logger.setLevel(logging.INFO)
+    logger.handlers.clear()
+
+    formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
+
+    file_handler = logging.FileHandler(log_path)
+    file_handler.setFormatter(formatter)
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setFormatter(formatter)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+    return logger
+
+
+def log_config(logger, device):
+    logger.info("Starting MNIST DDPM training")
+    logger.info("device=%s", device)
+    logger.info(
+        "config image_size=%s batch_size=%s epochs=%s lr=%s num_timesteps=%s",
+        IMAGE_SIZE,
+        BATCH_SIZE,
+        EPOCHS,
+        LR,
+        NUM_TIMESTEPS,
+    )
+    logger.info(
+        "model im_channels=%s model_channels=%s t_emb_dim=%s num_heads=%s",
+        IM_CHANNELS,
+        MODEL_CHANNELS,
+        T_EMB_DIM,
+        NUM_HEADS,
+    )
 
 
 def get_device():
@@ -73,8 +113,11 @@ def save_checkpoint(model, optimizer, epoch, global_step, checkpoint_dir):
         "epoch": epoch,
         "global_step": global_step,
     }
-    torch.save(checkpoint, checkpoint_dir / f"ddpm_mnist_epoch_{epoch:04d}.pt")
-    torch.save(checkpoint, checkpoint_dir / "latest.pt")
+    checkpoint_path = checkpoint_dir / f"ddpm_mnist_epoch_{epoch:04d}.pt"
+    latest_path = checkpoint_dir / "latest.pt"
+    torch.save(checkpoint, checkpoint_path)
+    torch.save(checkpoint, latest_path)
+    return checkpoint_path, latest_path
 
 
 @torch.no_grad()
@@ -88,8 +131,10 @@ def sample(model, scheduler, device, sample_dir, epoch):
         xt, _ = scheduler.sample_prev_timestep(xt, noise_pred, i)
 
     xt = (xt.clamp(-1, 1) + 1) / 2
-    utils.save_image(xt, sample_dir / f"sample_epoch_{epoch:04d}.png", nrow=4)
+    sample_path = sample_dir / f"sample_epoch_{epoch:04d}.png"
+    utils.save_image(xt, sample_path, nrow=4)
     model.train()
+    return sample_path
 
 
 def train():
@@ -99,8 +144,10 @@ def train():
     output_dir = Path(OUTPUT_DIR)
     checkpoint_dir = output_dir / "checkpoints"
     sample_dir = output_dir / "samples"
+    output_dir.mkdir(parents=True, exist_ok=True)
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     sample_dir.mkdir(parents=True, exist_ok=True)
+    logger = setup_logger(output_dir)
 
     dataloader = build_dataloader()
     model = Unet(
@@ -112,7 +159,8 @@ def train():
     optimizer = optim.AdamW(model.parameters(), lr=LR)
     scheduler = LinearNoiseScheduler(NUM_TIMESTEPS, BETA_START, BETA_END).to(device)
 
-    print(f"Training on {device}")
+    log_config(logger, device)
+    logger.info("num_batches_per_epoch=%s", len(dataloader))
     global_step = 0
     model.train()
 
@@ -137,11 +185,24 @@ def train():
             running_loss += loss.item()
             progress.set_postfix(loss=f"{loss.item():.4f}", avg=f"{running_loss / batch_idx:.4f}")
 
+        avg_loss = running_loss / len(dataloader)
+        logger.info(
+            "epoch=%s/%s global_step=%s avg_loss=%.6f",
+            epoch,
+            EPOCHS,
+            global_step,
+            avg_loss,
+        )
+
         if epoch % SAVE_INTERVAL == 0 or epoch == EPOCHS:
-            save_checkpoint(model, optimizer, epoch, global_step, checkpoint_dir)
+            checkpoint_path, latest_path = save_checkpoint(model, optimizer, epoch, global_step, checkpoint_dir)
+            logger.info("saved checkpoint=%s latest=%s", checkpoint_path, latest_path)
 
         if epoch % SAMPLE_INTERVAL == 0 or epoch == EPOCHS:
-            sample(model, scheduler, device, sample_dir, epoch)
+            sample_path = sample(model, scheduler, device, sample_dir, epoch)
+            logger.info("saved sample=%s", sample_path)
+
+    logger.info("Training finished")
 
 
 if __name__ == "__main__":
