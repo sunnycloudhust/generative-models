@@ -10,7 +10,7 @@ from model import *
 
 IMG_SIZE = 64
 BATCH_SIZE = 128
-DATASET_DIR = Path("1_Liner TF")
+DATASET_DIR = Path(__file__).resolve().parent.parent / "1_Liner TF"
 
 
 class FlatImageDataset(Dataset):
