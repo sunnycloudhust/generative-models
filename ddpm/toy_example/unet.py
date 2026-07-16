@@ -1,6 +1,6 @@
 from torch import nn
 import math
-
+import torch
 
 class Block(nn.Module):
     def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
@@ -102,3 +102,4 @@ class SimpleUnet(nn.Module):
 model = SimpleUnet()
 print("Num params: ", sum(p.numel() for p in model.parameters()))
 model
+
