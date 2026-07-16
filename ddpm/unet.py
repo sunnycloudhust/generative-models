@@ -183,3 +183,82 @@ class UpBlock(nn.Module):
         out = out + out_attn
         
         return out
+
+
+class Unet(nn.Module):
+    def __init__(
+        self,
+        im_channels=3,
+        model_channels=(32, 64, 128, 256),
+        t_emb_dim=128,
+        num_heads=4,
+    ):
+        super().__init__()
+        self.t_emb_dim = t_emb_dim
+
+        self.conv_in = nn.Conv2d(im_channels, model_channels[0], kernel_size=3, stride=1, padding=1)
+
+        self.downs = nn.ModuleList()
+        in_channels = model_channels[0]
+        for i, out_channels in enumerate(model_channels):
+            down_sample = i != len(model_channels) - 1
+            self.downs.append(
+                DownBlock(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    t_emb_dim=t_emb_dim,
+                    down_sample=down_sample,
+                    num_heads=num_heads,
+                )
+            )
+            in_channels = out_channels
+
+        self.mid = MidBlock(
+            in_channels=model_channels[-1],
+            out_channels=model_channels[-1],
+            t_emb_dim=t_emb_dim,
+            num_heads=num_heads,
+        )
+
+        self.ups = nn.ModuleList()
+        reversed_channels = list(reversed(model_channels))
+        current_channels = reversed_channels[0]
+        for i, skip_channels in enumerate(reversed_channels):
+            up_sample = i != 0
+            self.ups.append(
+                UpBlock(
+                    in_channels=current_channels + skip_channels,
+                    out_channels=skip_channels,
+                    t_emb_dim=t_emb_dim,
+                    up_sample=up_sample,
+                    num_heads=num_heads,
+                )
+            )
+            current_channels = skip_channels
+
+        self.norm_out = nn.GroupNorm(num_groups=8, num_channels=model_channels[0])
+        self.conv_out = nn.Conv2d(model_channels[0], im_channels, kernel_size=3, stride=1, padding=1)
+
+    def forward(self, x, t):
+        t_emb = get_time_embedding(t, self.t_emb_dim)
+
+        out = self.conv_in(x)
+        down_outputs = []
+        for down in self.downs:
+            out = down(out, t_emb)
+            down_outputs.append(out)
+
+        out = self.mid(out, t_emb)
+
+        for up in self.ups:
+            out_down = down_outputs.pop()
+            out = up(out, out_down, t_emb)
+
+        out = self.norm_out(out)
+        out = nn.SiLU()(out)
+        out = self.conv_out(out)
+        return out
+
+
+UNet = Unet
+
