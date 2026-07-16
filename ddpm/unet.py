@@ -183,4 +183,3 @@ class UpBlock(nn.Module):
         out = out + out_attn
         
         return out
-
