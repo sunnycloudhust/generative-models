@@ -1,18 +1,21 @@
 from torch import nn
 import math
 import torch
+from model import *
+
 
 class Block(nn.Module):
     def __init__(self, in_ch, out_ch, time_emb_dim, up=False):
         super().__init__()
         self.time_mlp =  nn.Linear(time_emb_dim, out_ch)
         if up:
-            self.conv1 = nn.Conv2d(2*in_ch, out_ch, 3, padding=1)
-            self.transform = nn.ConvTranspose2d(out_ch, out_ch, 4, 2, 1)
+            self.conv1 = nn.Conv2d(2*in_ch, out_ch, kernel_size=3, padding=1)
+            self.transform = nn.ConvTranspose2d(out_ch, out_ch, kernel_size=4, stride=2, padding=1)
         else:
-            self.conv1 = nn.Conv2d(in_ch, out_ch, 3, padding=1)
-            self.transform = nn.Conv2d(out_ch, out_ch, 4, 2, 1)
-        self.conv2 = nn.Conv2d(out_ch, out_ch, 3, padding=1)
+            self.conv1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1) #64 -> 64
+            self.transform = nn.Conv2d(out_ch, out_ch, kernel_size=4, stride=2, padding=1) # 64->32
+            
+        self.conv2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
         self.bnorm1 = nn.BatchNorm2d(out_ch)
         self.bnorm2 = nn.BatchNorm2d(out_ch)
         self.relu  = nn.ReLU()
@@ -79,7 +82,6 @@ class SimpleUnet(nn.Module):
                                         time_emb_dim, up=True) \
                     for i in range(len(up_channels)-1)])
         
-        # Edit: Corrected a bug found by Jakub C (see YouTube comment)
         self.output = nn.Conv2d(up_channels[-1], out_dim, 1)
 
     def forward(self, x, timestep):
@@ -100,6 +102,4 @@ class SimpleUnet(nn.Module):
         return self.output(x)
 
 model = SimpleUnet()
-print("Num params: ", sum(p.numel() for p in model.parameters()))
-model
 
