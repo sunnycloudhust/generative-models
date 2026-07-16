@@ -60,7 +60,45 @@ class DownBlock(nn.Module):
 
         return self.down_sample_conv(out)
 
-
 class MidBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, t_emb_dim, )
-    
+    def __init__(self, in_channels, out_channels, t_emb_dim, num_heads):
+        super().__init__()
+        
+        self.resnet_conv_first = nn.ModuleList([
+            nn.Sequential(
+                nn.GroupNorm(num_groups=8, num_channels=in_channels),
+                nn.SiLU(),
+                nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
+            ),
+            nn.Sequential(
+                nn.GroupNorm(num_groups=8, num_channels=out_channels),
+                nn.SiLU(),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
+            )
+        ])
+        
+        self.t_emb_layers = nn.ModuleList([
+            nn.Sequential(
+                nn.SiLU(),
+                nn.Linear(t_emb_dim, out_channels)
+            ),
+            nn.Sequential(
+                nn.SiLU(),
+                nn.Linear(t_emb_dim, out_channels)
+            )
+        ])
+        
+        self.resnet_conv_second = nn.ModuleList([
+            nn.Sequential(
+                nn.GroupNorm(num_groups=8, num_channels=out_channels),
+                nn.SiLU(),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
+            ),
+            nn.Sequential(
+                nn.GroupNorm(num_groups=8, num_channels=out_channels),
+                nn.SiLU(),
+                nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
+            )
+        ])
+        self.attention_norm = nn.GroupNorm(8, out_channels)
+        
