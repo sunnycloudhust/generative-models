@@ -11,5 +11,5 @@ def show_images(data, num_samples=20, cols=4):
         plt.subplot(int(num_samples/cols) + 1, cols, i + 1)
         plt.imshow(img[0])
 
-data = torchvision.datasets.StanfordCars(root=".", download=True)
+data = torchvision.datasets.CIFAR10(root=".", download=True)
 show_images(data)
