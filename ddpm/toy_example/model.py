@@ -8,8 +8,7 @@ def linear_beta_schedule(timesteps, start=0.0001, end=0.02):
 
 def get_index_from_list(vals, t, x_shape):
     """ 
-    Returns a specific index t of a passed list of values vals
-    while considering the batch dimension.
+    Returns a specific index t of a passed list of values vals while considering the batch dimension.
     """
     batch_size = t.shape[0]
     out = vals.gather(-1, t.cpu())
@@ -17,8 +16,7 @@ def get_index_from_list(vals, t, x_shape):
 
 def forward_diffusion_sample(x_0, t, device="cpu"):
     """ 
-    Takes an image and a timestep as input and 
-    returns the noisy version of it
+    Takes an image and a timestep as input and returns the noisy version of it
     """
     noise = torch.randn_like(x_0)
     sqrt_alphas_cumprod_t = get_index_from_list(sqrt_alphas_cumprod, t, x_0.shape)
