@@ -43,7 +43,7 @@ class DownBlock(nn.Module):
         self.down_sample_conv = nn.Conv2d(out_channels, out_channels, kernel_size=4,
                                           stride=2, padding=1) if self.down_sample else nn.Identity()
 
-    def forward(self, x, t_emb):
+    def forward(self, x, t_emb, return_skip=False):
         out = self.resnet_conv_first(x)
         out = out + self.t_emb_layers(t_emb)[:, :, None, None]
         out = self.resnet_conv_second(out)
@@ -58,7 +58,10 @@ class DownBlock(nn.Module):
         attn_output = attn_output.transpose(1, 2).reshape(batch_size, channels, height, width)
         out = out + attn_output
 
-        return self.down_sample_conv(out)
+        down_out = self.down_sample_conv(out)
+        if return_skip:
+            return down_out, out
+        return down_out
 
 class MidBlock(nn.Module):
     def __init__(self, in_channels, out_channels, t_emb_dim, num_heads):
@@ -158,8 +161,9 @@ class UpBlock(nn.Module):
         self.attention_norm = nn.GroupNorm(num_groups=8, num_channels=out_channels)
         self.attention = nn.MultiheadAttention(out_channels, num_heads, batch_first=True)
         self.residual_input_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
+        up_channels = in_channels - out_channels
         self.up_sample_conv = nn.ConvTranspose2d(
-            in_channels // 2, in_channels // 2, kernel_size=4, stride=2, padding=1
+            up_channels, up_channels, kernel_size=4, stride=2, padding=1
         ) if self.up_sample else nn.Identity()
     def forward(self, x, out_down, t_emb):
         x = self.up_sample_conv(x)
@@ -237,6 +241,7 @@ class Unet(nn.Module):
             current_channels = skip_channels
 
         self.norm_out = nn.GroupNorm(num_groups=8, num_channels=model_channels[0])
+        self.act_out = nn.SiLU()
         self.conv_out = nn.Conv2d(model_channels[0], im_channels, kernel_size=3, stride=1, padding=1)
 
     def forward(self, x, t):
@@ -245,8 +250,8 @@ class Unet(nn.Module):
         out = self.conv_in(x)
         down_outputs = []
         for down in self.downs:
-            out = down(out, t_emb)
-            down_outputs.append(out)
+            out, skip = down(out, t_emb, return_skip=True)
+            down_outputs.append(skip)
 
         out = self.mid(out, t_emb)
 
@@ -255,10 +260,9 @@ class Unet(nn.Module):
             out = up(out, out_down, t_emb)
 
         out = self.norm_out(out)
-        out = nn.SiLU()(out)
+        out = self.act_out(out)
         out = self.conv_out(out)
         return out
 
 
 UNet = Unet
-
