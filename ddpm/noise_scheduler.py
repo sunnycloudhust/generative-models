@@ -12,6 +12,14 @@ class LinearNoiseScheduler:
         self.alpha_cum_prod = torch.cumprod(self.alphas, dim=0)
         self.sqrt_alpha_cum_prod = torch.sqrt(self.alpha_cum_prod)
         self.sqrt_one_minus_alpha_cum_prod = torch.sqrt(1.0 - self.alpha_cum_prod)
+
+    def to(self, device):
+        self.betas = self.betas.to(device)
+        self.alphas = self.alphas.to(device)
+        self.alpha_cum_prod = self.alpha_cum_prod.to(device)
+        self.sqrt_alpha_cum_prod = self.sqrt_alpha_cum_prod.to(device)
+        self.sqrt_one_minus_alpha_cum_prod = self.sqrt_one_minus_alpha_cum_prod.to(device)
+        return self
     
     def add_noise(self, original, noise, t):
         original_shape = original.shape        # The expected shape is batch_size, channels, height, width
@@ -41,4 +49,3 @@ class LinearNoiseScheduler:
             sigma = variance ** 0.5
             z = torch.randn(xt.shape).to(xt.device)
             return mean + sigma*z, x0
-
