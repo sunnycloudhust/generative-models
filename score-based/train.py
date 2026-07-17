@@ -23,7 +23,7 @@ def loss_fn(model, x, marginal_prob_std, eps=1e-5):
     z = torch.randn_like(x)
     perturbed_x = x + z * std[:, None, None, None]
     score = model(perturbed_x, random_t)
-    loss = torch.mean(torch.sum((score * std[:, None, None, None] + z)**2, dim=(1,2,3)))
+    loss = torch.mean(torch.sum((score * std[:, None, None, None] + z)**2, dim=(1,2,3))) # use scaling sigma(t) squared 
     return loss
 
 
