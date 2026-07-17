@@ -6,7 +6,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
-import tqdm
+from tqdm.auto import trange
 
 
 def loss_fn(model, x, marginal_prob_std, eps=1e-5):
@@ -36,9 +36,9 @@ n_epochs =  50
 batch_size = 32 
 lr=1e-4 
 dataset = MNIST('.', train=True, transform=transforms.ToTensor(), download=True)
-data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 optimizer = Adam(score_model.parameters(), lr=lr)
-tqdm_epoch = tqdm.notebook.trange(n_epochs)
+tqdm_epoch = trange(n_epochs)
 
 for epoch in tqdm_epoch:
     avg_loss = 0.
