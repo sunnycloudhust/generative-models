@@ -28,12 +28,15 @@ class ScoreNet(nn.Module):
         self.conv1 = nn.Conv2d(1, channels[0], 3, stride=1, bias=False)
         self.dense1 = Dense(embed_dim, channels[0])
         self.gnorm1 = nn.GroupNorm(4, num_channels=channels[0])
+        
         self.conv2 = nn.Conv2d(channels[0], channels[1], 3, stride=2, bias=False)
         self.dense2 = Dense(embed_dim, channels[1])
         self.gnorm2 = nn.GroupNorm(32, num_channels=channels[1])
+        
         self.conv3 = nn.Conv2d(channels[1], channels[2], 3, stride=2, bias=False)
         self.dense3 = Dense(embed_dim, channels[2])
         self.gnorm3 = nn.GroupNorm(32, num_channels=channels[2])
+        
         self.conv4 = nn.Conv2d(channels[2], channels[3], 3, stride=2, bias=False)
         self.dense4 = Dense(embed_dim, channels[3])
         self.gnorm4 = nn.GroupNorm(32, num_channels=channels[3])    
