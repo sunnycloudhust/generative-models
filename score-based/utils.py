@@ -1,5 +1,6 @@
 import torch 
 import torch.nn as nn
+import functools
 import numpy as np 
 
 class GaussianFourierProjection(nn.Module):
@@ -17,8 +18,7 @@ class GaussianFourierProjection(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def marginal_prob_std(t, sigma):
-    """Compute the mean and standard deviation of $p_{0t}(x(t) | x(0))$.
-
+    """Compute standard deviation of $p_{0t}(x(t) | x(0))$.
     Args:    
         t: A vector of time steps.
         sigma: The $\sigma$ in our SDE.  
@@ -27,7 +27,7 @@ def marginal_prob_std(t, sigma):
         The standard deviation.
     """    
     t = torch.tensor(t, device=device)
-    return torch.sqrt((sigma**(2 * t) - 1.) / 2. / np.log(sigma))
+    return torch.sqrt((sigma**(2 * t) - 1.) / 2. / np.log(sigma))   # cumulative sum of variances unitl time t
 
 def diffusion_coeff(t, sigma):
     """Compute the diffusion coefficient of our SDE.
@@ -39,7 +39,7 @@ def diffusion_coeff(t, sigma):
         Returns:
             The vector of diffusion coefficients.
     """
-    return torch.tensor(sigma**t, device=device)
+    return torch.tensor(sigma**t, device=device)    # return sigma(t)
   
 sigma =  25.0
 marginal_prob_std_fn = functools.partial(marginal_prob_std, sigma=sigma)
