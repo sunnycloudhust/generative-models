@@ -35,7 +35,7 @@ if __name__ == '__main__':
     ckpt_path = 'ckpt.pth'
     if not os.path.exists(ckpt_path):
         raise FileNotFoundError(
-            f"Không tìm thấy checkpoint '{ckpt_path}'. Hãy chạy train.py trước rồi mới chạy test.py."
+            f"checkpoint not found '{ckpt_path}'. Hãy chạy train.py trước rồi mới chạy test.py."
         )
 
     model = ScoreNet(marginal_prob_std=marginal_prob_std_fn).to(device)
