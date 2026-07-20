@@ -1,32 +1,64 @@
 # Generative Models
 
-[![SonarQube Code Quality](https://github.com/sunnycloudhust/generative-models/actions/workflows/sonarqube.yml/badge.svg?branch=main)](https://github.com/sunnycloudhust/generative-models/actions/workflows/sonarqube.yml)
+A compact PyTorch repository for learning and experimenting with modern generative modeling approaches, including diffusion models, flow matching, score-based generative models, and Transformer-based sequence modeling.
 
-This repository contains small PyTorch implementations and experiments for generative modeling.
+## Overview
 
-## Contents
+This project is organized as a collection of small, educational implementations rather than a production-ready framework. Each directory focuses on a different generative modeling idea and is intentionally structured to be readable and easy to modify.
+
+## Repository Structure
 
 - `ddpm/`
-  - `noise_scheduler.py`: linear noise scheduler for DDPM-style diffusion models.
+  - A DDPM-style diffusion implementation with a toy example and a small U-Net-based training pipeline.
+- `flow-matching/`
+  - A lightweight flow matching experiment folder with notes and model-building scaffolding.
+- `score-based/`
+  - Score-based generative modeling experiments, including a small training script and utilities.
 - `transformer/`
-  - `preprocess.py`: token embedding projection with sinusoidal positional encoding.
-  - `self_attention.py`: work-in-progress self-attention module.
-  - `test.ipynb`: notebook for quick experiments.
+  - An encoder-decoder Transformer implementation for English-to-Vietnamese translation.
 
-## Setup
+## Getting Started
 
-Create and activate a Python environment, then install PyTorch.
+Create and activate a Python environment first, then install the required dependencies.
 
 ```bash
-pip install torch
+pip install torch torchvision
 ```
 
-## Usage
-
-Run individual modules directly while developing:
+If you want to run the Transformer training pipeline with optional experiment logging, you may also install:
 
 ```bash
-python transformer/preprocess.py
+pip install wandb
 ```
 
-The code is currently organized as learning experiments, so APIs may change as the implementations are completed.
+## Running the Experiments
+
+### DDPM toy example
+
+```bash
+cd ddpm/toy_example
+python main.py
+```
+
+### Score-based model
+
+```bash
+python score-based/train.py
+```
+
+### Transformer translation experiment
+
+```bash
+cd transformer
+python main.py
+```
+
+## Notes
+
+- The repository is primarily for learning and experimentation.
+- Some modules are still under development and may evolve as the code is extended.
+- The project favors clarity and simple training loops over optimized production pipelines.
+
+## License
+
+This repository is provided for educational and research-oriented experimentation. Use the code accordingly.
