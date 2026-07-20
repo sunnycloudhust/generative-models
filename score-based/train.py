@@ -11,7 +11,6 @@ from tqdm.auto import trange
 
 def loss_fn(model, x, marginal_prob_std, eps=1e-5):
     """The loss function for training score-based generative models.
-
     Args:
         model: A PyTorch model instance that represents a time-dependent score-based model.
         x: A mini-batch of training data.    
@@ -54,4 +53,5 @@ for epoch in tqdm_epoch:
     # Print the averaged training loss so far.
     tqdm_epoch.set_description('Average Loss: {:5f}'.format(avg_loss / num_items))
     # Update the checkpoint after each epoch of training.
-    torch.save(score_model.state_dict(), 'ckpt.pth')
+    ckpt_state = score_model.module.state_dict() if hasattr(score_model, 'module') else score_model.state_dict()
+    torch.save(ckpt_state, 'ckpt.pth')
