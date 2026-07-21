@@ -6,7 +6,6 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
-from tqdm.auto import trange
 
 
 def loss_fn(model, x, marginal_prob_std, eps=1e-5):
@@ -37,21 +36,30 @@ lr=1e-4
 dataset = MNIST('.', train=True, transform=transforms.ToTensor(), download=True)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 optimizer = Adam(score_model.parameters(), lr=lr)
-tqdm_epoch = trange(n_epochs)
+steps = len(data_loader)
+log_interval = max(1, steps // 10)  # log every 10% of an epoch by default
 
-for epoch in tqdm_epoch:
-    avg_loss = 0.
+for epoch in range(1, n_epochs + 1):
+    avg_loss = 0.0
     num_items = 0
-    for x, y in data_loader:
-        x = x.to(device)    
+    for step, (x, y) in enumerate(data_loader, start=1):
+        x = x.to(device)
         loss = loss_fn(score_model, x, marginal_prob_std_fn)
         optimizer.zero_grad()
-        loss.backward()    
+        loss.backward()
         optimizer.step()
+
         avg_loss += loss.item() * x.shape[0]
         num_items += x.shape[0]
-    # Print the averaged training loss so far.
-    tqdm_epoch.set_description('Average Loss: {:5f}'.format(avg_loss / num_items))
+
+        if step % log_interval == 0 or step == steps:
+            current_loss = avg_loss / num_items
+            print(f"Epoch {epoch}/{n_epochs}, step {step}/{steps} ({step/steps:.0%}), avg loss: {current_loss:.6f}")
+
+    # Print the averaged training loss for the epoch.
+    epoch_loss = avg_loss / num_items
+    print(f"Epoch {epoch}/{n_epochs} completed, avg loss: {epoch_loss:.6f}")
+
     # Update the checkpoint after each epoch of training.
     ckpt_state = score_model.module.state_dict() if hasattr(score_model, 'module') else score_model.state_dict()
     torch.save(ckpt_state, 'ckpt.pth')
