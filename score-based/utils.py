@@ -26,7 +26,7 @@ def marginal_prob_std(t, sigma):
     Returns:
         The standard deviation.
     """    
-    t = torch.tensor(t, device=device)
+    t = t.to(device)
     return torch.sqrt((sigma**(2 * t) - 1.) / 2. / np.log(sigma))   # cumulative sum of variances unitl time t or sigma(t)
 
 def diffusion_coeff(t, sigma):
