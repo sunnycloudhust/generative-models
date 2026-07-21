@@ -2,7 +2,6 @@ from model import *
 from utils import *
 import torch
 import functools
-import sys
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
@@ -55,13 +54,11 @@ for epoch in range(1, n_epochs + 1):
 
         if step % log_interval == 0 or step == steps:
             current_loss = avg_loss / num_items
-            print(f"Epoch {epoch}/{n_epochs}, step {step}/{steps} ({step/steps:.0%}), avg loss: {current_loss:.6f}")
-            sys.stdout.flush()
+            print(f"Epoch {epoch}/{n_epochs}, step {step}/{steps}, avg loss: {current_loss:.4f}")
 
     # Print the averaged training loss for the epoch.
     epoch_loss = avg_loss / num_items
     print(f"Epoch {epoch}/{n_epochs} completed, avg loss: {epoch_loss:.6f}")
-    sys.stdout.flush()
 
     # Update the checkpoint after each epoch of training.
     ckpt_state = score_model.module.state_dict() if hasattr(score_model, 'module') else score_model.state_dict()
