@@ -52,10 +52,6 @@ for epoch in range(1, n_epochs + 1):
         avg_loss += loss.item() * x.shape[0]
         num_items += x.shape[0]
 
-        if step % log_interval == 0 or step == steps:
-            current_loss = avg_loss / num_items
-            print(f"Epoch {epoch}/{n_epochs}, step {step}/{steps}, avg loss: {current_loss:.4f}")
-
     # Print the averaged training loss for the epoch.
     epoch_loss = avg_loss / num_items
     print(f"Epoch {epoch}/{n_epochs} completed, avg loss: {epoch_loss:.6f}")
