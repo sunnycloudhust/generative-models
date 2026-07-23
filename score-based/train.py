@@ -1,5 +1,6 @@
 from model import *
 from utils import *
+import os
 import torch
 import functools
 from torch.optim import Adam
@@ -39,7 +40,26 @@ optimizer = Adam(score_model.parameters(), lr=lr)
 steps = len(data_loader)
 log_interval = max(1, steps // 10)  # log every 10% of an epoch by default
 
-for epoch in range(1, n_epochs + 1):
+checkpoint_path = 'checkpoint.pth'
+start_epoch = 1
+
+if os.path.exists(checkpoint_path):
+    checkpoint = torch.load(checkpoint_path, map_location=device)
+    model_state = checkpoint.get('model_state_dict', checkpoint)
+    if hasattr(score_model, 'module'):
+        score_model.module.load_state_dict(model_state)
+    else:
+        score_model.load_state_dict(model_state)
+        
+    if 'optimizer_state_dict' in checkpoint:
+        optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    start_epoch = checkpoint.get('epoch', 0) + 1
+    print(f"Loaded checkpoint from '{checkpoint_path}', resuming at epoch {start_epoch}.")
+    if start_epoch > n_epochs:
+        print(f"Checkpoint already contains {checkpoint.get('epoch')} epochs; nothing to train.")
+        exit(0)
+
+for epoch in range(start_epoch, n_epochs + 1):
     avg_loss = 0.0
     num_items = 0
     for step, (x, y) in enumerate(data_loader, start=1):
@@ -58,4 +78,11 @@ for epoch in range(1, n_epochs + 1):
 
     # Update the checkpoint after each epoch of training.
     ckpt_state = score_model.module.state_dict() if hasattr(score_model, 'module') else score_model.state_dict()
-    torch.save(ckpt_state, 'ckpt.pth')
+    checkpoint = {
+        'epoch': epoch,
+        'model_state_dict': ckpt_state,
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss': epoch_loss,
+    }
+    torch.save(checkpoint, checkpoint_path)
+    print(f"Saved checkpoint to '{checkpoint_path}' after epoch {epoch}.")
