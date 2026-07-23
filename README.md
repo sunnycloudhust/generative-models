@@ -1,10 +1,22 @@
 # Generative Models
 
+[![Quality gate status](https://sonarcloud.io/api/project_badges/measure?project=sunnycloudhust_generative-models&metric=alert_status&token=1b87c7ffc7c9c1e15efc3328d039bd8386c834ff)](https://sonarcloud.io/summary/new_code?id=sunnycloudhust_generative-models)
+
 A compact PyTorch repository for learning and experimenting with modern generative modeling approaches, including diffusion models, flow matching, score-based generative models, and Transformer-based sequence modeling.
 
 ## Overview
 
 This project is organized as a collection of small, educational implementations rather than a production-ready framework. Each directory focuses on a different generative modeling idea and is intentionally structured to be readable and easy to modify.
+
+## Code Quality Scan
+
+This repository includes a SonarQube scan configuration in `sonar-project.properties` for static quality inspection.
+
+- SonarQube project name: `generative-models`
+- Scanned sources: `ddpm`, `transformer`
+- Python versions: `3.10`, `3.11`, `3.12`
+- Exclusions: `__pycache__`, compiled Python files, checkpoints, data, model weights, and archives
+- Quality gate wait: enabled via `sonar.qualitygate.wait=true`
 
 ## Repository Structure
 
