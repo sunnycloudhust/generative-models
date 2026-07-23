@@ -14,10 +14,12 @@ def load_checkpoint(model, ckpt_path):
 
 
 @torch.no_grad()
-def sample_images(model, batch_size=16, n_steps=100, save_path='samples.png'):
+def sample_images(model, batch_size=16, n_steps=100, save_path='samples.png', progress_save_path='samples_progress.png', n_progress_steps=8):
     model.eval()
     x = torch.randn(batch_size, 1, 28, 28, device=device)
     t = torch.linspace(1.0, 1e-3, n_steps, device=device)
+    progress_indices = set(torch.linspace(0, n_steps - 1, steps=n_progress_steps, dtype=torch.long).cpu().tolist())
+    progress_images = []
 
     for i in range(n_steps):
         ti = t[i]
@@ -30,9 +32,20 @@ def sample_images(model, batch_size=16, n_steps=100, save_path='samples.png'):
             noise_scale = torch.sqrt((ti_next - ti).abs())
             x = x + noise_scale * torch.randn_like(x)
 
+        if i in progress_indices:
+            x_vis = (x[[0]] + 1.0) / 2.0
+            x_vis = torch.clamp(x_vis, 0.0, 1.0)
+            progress_images.append(x_vis)
+
     x = (x + 1.0) / 2.0
     x = torch.clamp(x, 0.0, 1.0)
     vutils.save_image(x, save_path, nrow=4)
+
+    if len(progress_images) > 0:
+        progress_images = torch.cat(progress_images, dim=0)
+        vutils.save_image(progress_images, progress_save_path, nrow=len(progress_images))
+        print(f'Saved progress grid to {progress_save_path}')
+
     print(f'Saved samples to {save_path}')
     return x
 
