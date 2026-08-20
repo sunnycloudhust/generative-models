@@ -9,7 +9,6 @@ A minimal flow matching implementation that learns a velocity field for transfor
 - `unet.py`: U-Net that predicts the time-dependent velocity field.
 - `train.py`: trains the flow matching model and saves a checkpoint.
 - `sample.py`: generates an image grid from a checkpoint.
-- `sample_trajectory.py`: saves intermediate states from the generation process.
 - `config.py`: training and sampling hyperparameters.
 
 ## Installation
@@ -41,14 +40,6 @@ python sample.py
 ```
 
 The result is saved to `runs/celeba_flow/test_samples.png`.
-
-## Generating Trajectories
-
-```bash
-python sample_trajectory.py
-```
-
-This command generates `2` samples, saves `8` frames per trajectory, and writes the result to `runs/celeba_flow/trajectory.png`.
 
 ## Notes
 
