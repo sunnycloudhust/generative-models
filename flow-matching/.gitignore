@@ -17,7 +17,6 @@ env/
 .DS_Store
 
 # Data and training outputs
-*.data/
 runs/
 checkpoints/
 outputs/
@@ -29,7 +28,3 @@ wandb/
 *.ckpt
 *.safetensors
 
-# Generated media
-*.png
-*.jpg
-*.jpeg
