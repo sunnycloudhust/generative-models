@@ -26,6 +26,9 @@ def sample(model, device, n_samples, image_size, steps):
 
 
 def save_samples(model, device, out_dir, step, image_size, n_samples, sample_steps):
+    """
+        This function samples the image from noise distribution every sample_steps
+    """
     x = sample(model, device, n_samples, image_size, sample_steps)
     grid = make_grid((x + 1) * 0.5, nrow=int(math.sqrt(n_samples)))
     save_image(grid, out_dir / f"samples_step_{step:07d}.png")
