@@ -31,7 +31,7 @@ def save_samples(model, device, out_dir, step, image_size, n_samples, sample_ste
     """
     x = sample(model, device, n_samples, image_size, sample_steps)
     grid = make_grid((x + 1) * 0.5, nrow=int(math.sqrt(n_samples)))
-    save_image(grid, out_dir / f"samples_step_{step:07d}.png")
+    save_image(grid, out_dir / f"samples_step_{step}.png")
 
 
 def train(config):
@@ -83,7 +83,7 @@ def train(config):
             scaler.update()
 
             if step % config["log_every"] == 0:
-                print(f"step={step:07d}/{config['steps']} loss={loss.item():.5f}")
+                print(f"step={step}/{config['steps']} loss={loss.item():.4f}")
 
             if step % config["sample_every"] == 0:
                 save_samples(
@@ -105,7 +105,7 @@ def train(config):
                         "optimizer": opt.state_dict(),
                         "config": config,
                     },
-                    out_dir / f"ckpt_step_{step:07d}.pt",
+                    out_dir / f"ckpt_step_{step}.pt",
                 )
 
             if step >= config["steps"]:
