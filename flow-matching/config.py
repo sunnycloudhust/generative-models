@@ -4,7 +4,7 @@ CONFIG = {
     "image_size": 64,
     "batch_size": 64,
     "base_channels": 64,
-    "steps": 100000,
+    "steps": 10000,
     "lr": 2e-4,
     "weight_decay": 1e-4,
     "grad_clip": 1.0,
