@@ -3,7 +3,7 @@ from pathlib import Path
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
-from torchvision import datasets, transforms
+from torchvision import transforms
 
 
 class FlatImageDataset(Dataset):
@@ -26,7 +26,7 @@ class FlatImageDataset(Dataset):
         return self.transform(image), 0
 
 
-def build_loader(data_root, batch_size, image_size, workers, download):
+def build_loader(data_root, batch_size, image_size, workers):
     transform = transforms.Compose(
         [
             transforms.CenterCrop(178),
@@ -37,22 +37,7 @@ def build_loader(data_root, batch_size, image_size, workers, download):
         ]
     )
 
-    try:
-        dataset = datasets.CelebA(
-            root=data_root,
-            split="train",
-            target_type="attr",
-            transform=transform,
-            download=download,
-        )
-    except RuntimeError as err:
-        fallback = Path(data_root) / "celeba" / "img_align_celeba"
-        if not fallback.exists():
-            raise RuntimeError(
-                "CelebA download failed or dataset is missing. Put images under "
-                f"{fallback}/*.jpg, or set download=True in celeba_config.py."
-            ) from err
-        dataset = FlatImageDataset(fallback, transform=transform)
+    dataset = FlatImageDataset(data_root, transform=transform)
 
     return DataLoader(
         dataset,

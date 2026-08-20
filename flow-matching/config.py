@@ -10,7 +10,6 @@ CONFIG = {
     "grad_clip": 1.0,
     "workers": 4,
     "device": None,
-    "download": False,
     "amp": True,
     "log_every": 100,
     "sample_every": 1000,

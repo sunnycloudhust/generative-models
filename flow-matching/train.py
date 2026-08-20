@@ -39,7 +39,6 @@ def train(config):
         batch_size=config["batch_size"],
         image_size=config["image_size"],
         workers=config["workers"],
-        download=config["download"],
     )
     model = UNetVelocity(base_channels=config["base_channels"]).to(device)
     opt = torch.optim.AdamW(
