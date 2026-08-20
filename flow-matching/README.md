@@ -2,7 +2,7 @@
 
 Note: For simplicity of this repo, some technical improvements have been discarded
 
-A minimal flow matching implementation that learns a velocity field for transforming Gaussian noise into `64x64` CelebA face images. The model uses a U-Net, and the ODE is solved with the Euler method.
+A minimal flow matching implementation that learns a velocity field for transforming Gaussian noise into `64x64` CelebA face images. The model uses a U-Net, and the ODE is solved with the Euler method. It achieves FID score of 80.4752:`)))`
 
 ![Image generation trajectory with flow matching](assets/trajectory.png)
 
