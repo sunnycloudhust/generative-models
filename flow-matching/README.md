@@ -11,6 +11,7 @@ A minimal flow matching implementation that learns a velocity field for transfor
 - `unet.py`: U-Net that predicts the time-dependent velocity field.
 - `train.py`: trains the flow matching model and saves a checkpoint.
 - `sample.py`: generates an image grid from a checkpoint.
+- `eval/evaluate.py`: evaluates generated images with the Fréchet Inception Distance (FID).
 - `config.py`: training and sampling hyperparameters.
 
 ## Installation
@@ -42,6 +43,27 @@ python sample.py
 ```
 
 The result is saved to `runs/celeba_flow/test_samples.png`.
+
+## Evaluating FID
+
+After training a model, evaluate it against the images in `data/`:
+
+```bash
+python eval/evaluate.py --num-samples 1000
+```
+
+The script generates the requested number of samples, extracts Inception v3 features from real and generated images, and prints the FID score. The first run downloads the pretrained Inception v3 weights. Use more samples for a more stable estimate.
+
+You can override the default paths and sampling settings:
+
+```bash
+python eval/evaluate.py \
+	--data-root ./data \
+	--checkpoint ./runs/celeba_flow/model_final.pt \
+	--num-samples 1000 \
+	--batch-size 64 \
+	--steps 100
+```
 
 ## Notes
 

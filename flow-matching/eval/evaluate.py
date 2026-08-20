@@ -1,6 +1,9 @@
 from pathlib import Path
 import sys
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(PROJECT_ROOT))
+
 import torch
 from PIL import Image
 from torch.utils.data import DataLoader, Dataset
@@ -12,9 +15,6 @@ except ImportError:
 
     Inception3_Weights = None
 
-    PROJECT_ROOT = Path(__file__).resolve().parents[1]
-    sys.path.insert(0, str(PROJECT_ROOT))
-
 from config import CONFIG
 from sample import load_model
 from train import sample
@@ -23,8 +23,10 @@ from train import sample
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 INCEPTION_MEAN = [0.485, 0.456, 0.406]
 INCEPTION_STD = [0.229, 0.224, 0.225]
-DATA_ROOT = CONFIG["data_root"]
-CHECKPOINT_PATH = "./runs/celeba_flow/model_final.pt"
+DATA_ROOT = Path(CONFIG["data_root"])
+if not DATA_ROOT.is_absolute():
+    DATA_ROOT = PROJECT_ROOT / DATA_ROOT
+CHECKPOINT_PATH = PROJECT_ROOT / "runs/celeba_flow/model_final.pt"
 NUM_SAMPLES = 1000
 BATCH_SIZE = CONFIG["batch_size"]
 SAMPLE_STEPS = CONFIG["sample_steps"]
