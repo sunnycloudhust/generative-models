@@ -13,6 +13,9 @@ from unet import UNetVelocity
 
 @torch.no_grad()
 def sample(model, device, n_samples, image_size, steps):
+    """
+    This function samples (n_samples) images from noise distribution using ODE
+    """
     model.eval()
     x = torch.randn(n_samples, 3, image_size, image_size, device=device)
     dt = 1.0 / steps
