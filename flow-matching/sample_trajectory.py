@@ -10,7 +10,7 @@ from sample import load_model
 
 CHECKPOINT_PATH = "./runs/celeba_flow/model_final.pt"
 OUTPUT_PATH = "./runs/celeba_flow/trajectory.png"
-N_IMAGES = 4
+N_IMAGES = 2
 SAMPLE_STEPS = 100
 N_FRAMES = 8
 
