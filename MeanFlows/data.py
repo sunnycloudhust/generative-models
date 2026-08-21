@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import torch
+from PIL import Image
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
@@ -10,11 +11,15 @@ IMAGENET_STD = (0.5, 0.5, 0.5)
 
 
 def build_loader(data_root, image_size, batch_size, workers, split="train"):
-    root = Path(data_root) / split
-    if not root.is_dir():
+    root = Path(data_root)
+    split_root = root / split
+    image_root = split_root if split_root.is_dir() else root
+
+    if not image_root.is_dir():
         raise FileNotFoundError(
-            f"Expected ImageNet split at {root}. Set --data-root to the directory containing train/ and val/."
+            f"Expected CelebA image directory at {image_root}. Set data_root to the folder containing the .jpg files."
         )
+
     transform_list = [
         transforms.RandomResizedCrop(image_size, scale=(0.7, 1.0))
         if split == "train"
@@ -23,10 +28,19 @@ def build_loader(data_root, image_size, batch_size, workers, split="train"):
     if split != "train":
         transform_list.append(transforms.CenterCrop(image_size))
     transform_list.extend(
-        [transforms.RandomHorizontalFlip() if split == "train" else transforms.Lambda(lambda image: image),
-         transforms.ToTensor(), transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD)]
+        [
+            transforms.RandomHorizontalFlip() if split == "train" else transforms.Lambda(lambda image: image),
+            transforms.ToTensor(),
+            transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+        ]
     )
-    dataset = datasets.ImageFolder(root, transform=transforms.Compose(transform_list))
+
+    dataset = datasets.DatasetFolder(
+        str(image_root),
+        loader=lambda path: Image.open(path).convert("RGB"),
+        extensions=(".jpg", ".jpeg", ".png"),
+        transform=transforms.Compose(transform_list),
+    )
     return DataLoader(
         dataset,
         batch_size=batch_size,

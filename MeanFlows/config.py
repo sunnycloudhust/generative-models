@@ -1,9 +1,9 @@
 CONFIG = {
-    "data_root": "/path/to/imagenet",
-    "out_dir": "./runs/imagenet_meanflow",
+    "data_root": "./data",
+    "out_dir": "./runs/celeba_meanflow",
     "resume": None,
-    "checkpoint": "./runs/imagenet_meanflow/model_final.pt",
-    "sample_output": "./runs/imagenet_meanflow/samples.png",
+    "checkpoint": "./runs/celeba_meanflow/model_final.pt",
+    "sample_output": "./runs/celeba_meanflow/samples.png",
     "image_size": 64,
     "batch_size": 32,
     "base_channels": 128,
@@ -20,5 +20,5 @@ CONFIG = {
     "ckpt_every": 1000,
     "seed": 42,
     "eval_batches": 100,
-    "eval_output": "./runs/imagenet_meanflow/eval.json",
+    "eval_output": "./runs/celeba_meanflow/eval.json",
 }
