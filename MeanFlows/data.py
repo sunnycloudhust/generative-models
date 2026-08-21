@@ -29,8 +29,7 @@ class FlatImageDataset(Dataset):
 
 def build_loader(data_root, image_size, batch_size, workers, split="train"):
     root = Path(data_root)
-    split_root = root / split
-    image_root = split_root if split_root.is_dir() else root
+    image_root = root
 
     if not image_root.is_dir():
         raise FileNotFoundError(
