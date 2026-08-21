@@ -21,11 +21,13 @@ def meanflow_loss(model, x0, x1):
     velocity = x1 - x0
     ones = torch.ones_like(t)
 
-    prediction, derivative = jvp(
-        lambda state, time: model(state, r, time),
-        (x_t, t),
-        (velocity, ones),
-    )
+    with torch.no_grad():
+        _, derivative = jvp(
+            lambda state, time: model(state, r, time),
+            (x_t, t),
+            (velocity, ones),
+        )
+    prediction = model(x_t, r, t)
     target = (velocity - (t - r)[:, None, None, None] * derivative).detach()
     return torch.mean((prediction - target) ** 2)
 

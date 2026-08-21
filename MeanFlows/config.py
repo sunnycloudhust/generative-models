@@ -11,7 +11,7 @@ CONFIG = {
     "checkpoint": "./runs/celeba_meanflow/model_final.pt",
     "sample_output": "./runs/celeba_meanflow/samples.png",
     "image_size": 64,
-    "batch_size": 4,
+    "batch_size": 1,
     "base_channels": 64,
     "steps": 100000,
     "lr": 2e-4,
