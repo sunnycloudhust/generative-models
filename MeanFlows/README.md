@@ -1,16 +1,18 @@
-# MeanFlow ImageNet
+# MeanFlow CelebA
 
-A compact MeanFlow implementation for ImageNet using PyTorch.
+A compact MeanFlow implementation for CelebA using PyTorch.
 
 ## Dataset layout
 
-Set `data_root` in `config.py` to an ImageNet directory containing:
+Set `data_root` in `config.py` to a directory containing the image files. Flat folders are supported:
 
 ```text
-imagenet/
-  train/n01440764/*.JPEG
-  val/n01440764/*.JPEG
+data/
+  000001.jpg
+  000002.jpg
 ```
+
+The default path points to this project's `data/` directory, independent of the directory from which you start the command.
 
 ## Train
 

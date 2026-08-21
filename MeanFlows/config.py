@@ -1,5 +1,11 @@
+from pathlib import Path
+
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+
+
 CONFIG = {
-    "data_root": "./data",
+    "data_root": PROJECT_ROOT / "data",
     "out_dir": "./runs/celeba_meanflow",
     "resume": None,
     "checkpoint": "./runs/celeba_meanflow/model_final.pt",
