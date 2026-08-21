@@ -1,0 +1,6 @@
+{
+  "model_type": "flow_matching-CelebA",
+  "in_channels": 3,
+  "base_channels": 64,
+  "architecture": "UNet"
+}
