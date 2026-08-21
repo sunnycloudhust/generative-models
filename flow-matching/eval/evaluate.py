@@ -57,7 +57,7 @@ def get_features(images, model, device):
 
 
 def calculate_statistics(features):
-    return features.mean(dim=0), torch.cov(features.T)
+    return features.mean(dim=0), torch.cov(features.T) #return mean, covariance
 
 
 def calculate_fid(real_features, fake_features):

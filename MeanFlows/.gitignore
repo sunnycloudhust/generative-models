@@ -4,9 +4,6 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
-data/
-datasets/
-
 runs/
 outputs/
 checkpoints/
