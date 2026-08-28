@@ -12,8 +12,7 @@ IMAGENET_STD = (0.5, 0.5, 0.5)
 
 class FlatImageDataset(Dataset):
     def __init__(self, root, transform):
-        self.paths = sorted(
-            path
+        self.paths = sorted(path
             for path in root.rglob("*")
             if path.is_file() and path.suffix.lower() in {".jpg", ".jpeg", ".png"}
         )
@@ -33,7 +32,7 @@ def build_loader(data_root, image_size, batch_size, workers, split="train"):
 
     if not image_root.is_dir():
         raise FileNotFoundError(
-            f"Expected CelebA image directory at {image_root}. Set data_root to the folder containing the .jpg files."
+            f"Expected CelebA image directory at {image_root}"
         )
 
     transform_list = [
@@ -64,6 +63,7 @@ def build_loader(data_root, image_size, batch_size, workers, split="train"):
         dataset = FlatImageDataset(image_root, transform)
     if not len(dataset):
         raise FileNotFoundError(f"No image files found under {image_root}.")
+    
     return DataLoader(
         dataset,
         batch_size=batch_size,
