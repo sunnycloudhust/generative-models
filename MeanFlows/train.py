@@ -61,11 +61,13 @@ def train(config, resume=None):
     device = torch.device(config.get("device") or ("cuda" if torch.cuda.is_available() else "cpu"))
     output_dir = Path(config["out_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
+    
     loader = build_loader(config["data_root"], config["image_size"], config["batch_size"], config["workers"])
     model = MeanFlowUNet(base_channels=config["base_channels"]).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
     use_amp = bool(config["amp"] and device.type == "cuda")
     scaler = build_scaler(device, use_amp)
+    
     step = 0
     if resume:
         state = torch.load(resume, map_location=device, weights_only=False)
@@ -109,9 +111,5 @@ def train(config, resume=None):
     save_samples(model, device, output_dir, step, config)
 
 
-def main():
-    train(CONFIG, CONFIG["resume"])
-
-
 if __name__ == "__main__":
-    main()
+    train(CONFIG, CONFIG["resume"])
