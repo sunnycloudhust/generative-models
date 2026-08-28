@@ -2,11 +2,11 @@ from pathlib import Path
 
 
 CONFIG = {
-    "data_root": Path("/Users/user1/Documents/generative-models/MeanFlows/data"),
-    "out_dir": "/Users/user1/Documents/generative-models/MeanFlows/runs/celeba_meanflow",
+    "data_root": Path("data"),
+    "out_dir": "runs/celeba_meanflow",
     "resume": None,
-    "checkpoint": "/Users/user1/Documents/generative-models/MeanFlows/runs/celeba_meanflow/model_final.pt",
-    "sample_output": "/Users/user1/Documents/generative-models/MeanFlows/runs/celeba_meanflow/samples.png",
+    "checkpoint": "runs/celeba_meanflow/model_final.pt",
+    "sample_output": "runs/celeba_meanflow/samples.png",
     "image_size": 64,
     "batch_size": 1,
     "base_channels": 64,
@@ -23,5 +23,5 @@ CONFIG = {
     "ckpt_every": 1000,
     "seed": 42,
     "eval_batches": 100,
-    "eval_output": "/Users/user1/Documents/generative-models/MeanFlows/runs/celeba_meanflow/eval.json",
+    "eval_output": "runs/celeba_meanflow/eval.json",
 }
