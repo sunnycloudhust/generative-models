@@ -23,6 +23,7 @@ def sample(model, device, n_samples, image_size, steps):
 def main():
     device = torch.device(CONFIG.get("device") or ("cuda" if torch.cuda.is_available() else "cpu"))
     model = MeanFlowUNet(base_channels=CONFIG["base_channels"]).to(device)
+    
     checkpoint = torch.load(CONFIG["checkpoint"], map_location=device, weights_only=False)
     model.load_state_dict(checkpoint["model"] if "model" in checkpoint else checkpoint)
     images = sample(
