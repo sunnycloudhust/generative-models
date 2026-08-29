@@ -38,14 +38,6 @@ def save_samples(model, device, output_dir, step, config):
     save_image(grid, output_dir / f"samples_step_{step}.png")
 
 
-def set_seed(seed):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
-
-
 def build_scaler(device, enabled):
     if not enabled:
         return None
@@ -57,7 +49,6 @@ def build_scaler(device, enabled):
 
 
 def train(config, resume=None):
-    set_seed(config["seed"])
     device = torch.device(config.get("device") or ("cuda" if torch.cuda.is_available() else "cpu"))
     output_dir = Path(config["out_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
