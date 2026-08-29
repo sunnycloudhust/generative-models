@@ -9,7 +9,7 @@ CONFIG = {
     "sample_output": "runs/celeba_meanflow/samples.png",
     "image_size": 64,
     "batch_size": 1,
-    "base_channels": 64,
+    "base_channels": 96,
     "steps": 10000,
     "lr": 2e-4,
     "weight_decay": 1e-4,
