@@ -9,6 +9,7 @@ from unet import MeanFlowUNet
 
 
 def sample(model, device, n_samples, image_size, steps):
+    was_training = model.training
     model.eval()
     x = torch.randn(n_samples, 3, image_size, image_size, device=device)
     time_grid = torch.linspace(0.0, 1.0, steps + 1, device=device)
@@ -17,6 +18,8 @@ def sample(model, device, n_samples, image_size, steps):
             r = start.expand(n_samples)
             t = end.expand(n_samples)
             x = x + (end - start) * model(x, r, t)
+    if was_training:
+        model.train()
     return x.clamp(-1.0, 1.0)
 
 

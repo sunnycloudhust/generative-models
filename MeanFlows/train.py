@@ -108,7 +108,10 @@ def train(config, resume=None):
                 torch.save(checkpoint, output_dir / f"ckpt_step_{step}.pt")
             if step >= config["steps"]:
                 break
-    torch.save({"step": step, "model": model.state_dict(), "config": config}, output_dir / "model_final.pt")
+    final_checkpoint = {"step": step, "model": model.state_dict(), "optimizer": optimizer.state_dict(), "config": config}
+    if scaler is not None:
+        final_checkpoint["scaler"] = scaler.state_dict()
+    torch.save(final_checkpoint, output_dir / "model_final.pt")
     save_samples(model, device, output_dir, step, config)
 
 
