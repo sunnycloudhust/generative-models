@@ -16,7 +16,7 @@ from torchvision.utils import make_grid, save_image
 def meanflow_loss(model, x0, x1):
     batch_size = x1.shape[0]
     t = torch.rand(batch_size, device=x1.device)
-    r = torch.rand(batch_size, device=x1.device) * t
+    r = torch.rand(batch_size, device=x1.device) * t #0<r<t<1
     x_t = x0 + t[:, None, None, None] * (x1 - x0)
     velocity = x1 - x0
     ones = torch.ones_like(t)
@@ -96,6 +96,7 @@ def train(config, resume=None):
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), config["grad_clip"])
                 optimizer.step()
+            
             if step % config["log_every"] == 0:
                 print(f"step={step}/{config['steps']} loss={loss.item():.5f}")
             if step % config["sample_every"] == 0:
