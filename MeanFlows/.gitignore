@@ -4,12 +4,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
-runs/
 outputs/
 checkpoints/
-*.pt
-*.pth
-*.ckpt
+
 
 .venv/
 venv/
