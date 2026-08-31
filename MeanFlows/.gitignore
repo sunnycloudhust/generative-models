@@ -4,10 +4,13 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Generated artifacts
 outputs/
 checkpoints/
-
-
+.runs/
+runs/
+runs/**
+.pt*
 .venv/
 venv/
 env/
