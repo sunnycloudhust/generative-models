@@ -5,6 +5,8 @@ CONFIG = {
     "data_root": Path("data"),
     "out_dir": "runs/celeba_meanflow",
     "resume": None,
+    "device": "cuda",
+    "distributed": True,
     "checkpoint": "runs/celeba_meanflow/model_final.pt",
     "sample_output": "runs/celeba_meanflow/samples.png",
     "image_size": 64,

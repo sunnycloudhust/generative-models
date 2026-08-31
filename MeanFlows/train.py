@@ -1,7 +1,6 @@
-import random
+import os
 from pathlib import Path
 
-import numpy as np
 import torch
 import torch.nn as nn
 from torch.func import jvp
@@ -59,36 +58,70 @@ def build_scaler(device, enabled):
 
 
 def train(config, resume=None):
-    device = torch.device(config.get("device") or ("cuda" if torch.cuda.is_available() else "cpu"))
+    world_size = int(os.environ.get("WORLD_SIZE", 1))
+    local_rank = int(os.environ.get("LOCAL_RANK", 0))
+    rank = int(os.environ.get("RANK", 0))
+    distributed = world_size > 1
+
+    if distributed:
+        torch.cuda.set_device(local_rank)
+        if not torch.distributed.is_initialized():
+            torch.distributed.init_process_group(backend="nccl", init_method="env://")
+        device = torch.device(f"cuda:{local_rank}")
+    else:
+        device = torch.device(config.get("device") or ("cuda" if torch.cuda.is_available() else "cpu"))
+
     output_dir = Path(config["out_dir"])
-    output_dir.mkdir(parents=True, exist_ok=True)
+    if rank == 0:
+        output_dir.mkdir(parents=True, exist_ok=True)
+
     log_path = output_dir / "train.log"
-    if log_path.exists():
+    if rank == 0 and log_path.exists():
         log_path.unlink()
 
-    loader = build_loader(config["data_root"], config["image_size"], config["batch_size"], config["workers"])
+    loader = build_loader(
+        config["data_root"],
+        config["image_size"],
+        config["batch_size"],
+        config["workers"],
+        distributed=distributed,
+        rank=rank,
+        world_size=world_size,
+    )
+
     model = MeanFlowUNet(base_channels=config["base_channels"]).to(device)
+    if distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[local_rank], output_device=local_rank)
+
     optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
     use_amp = bool(config["amp"] and device.type == "cuda")
     scaler = build_scaler(device, use_amp)
-    
+
     step = 0
     if resume:
-        state = torch.load(resume, map_location=device, weights_only=False)
-        model.load_state_dict(state["model"])
+        state = torch.load(resume, map_location="cpu", weights_only=False)
+        model.module.load_state_dict(state["model"]) if hasattr(model, "module") else model.load_state_dict(state["model"])
         optimizer.load_state_dict(state["optimizer"])
         if scaler is not None and "scaler" in state:
             scaler.load_state_dict(state["scaler"])
         step = state.get("step", 0)
-    print(f"device={device} images={len(loader.dataset):,} parameters={sum(p.numel() for p in model.parameters()):,}")
+
+    if rank == 0:
+        print(f"device={device} distributed={distributed} rank={rank}/{world_size} images={len(loader.dataset):,} parameters={sum(p.numel() for p in model.parameters()):,}")
     model.train()
+
+    epoch = 0
     while step < config["steps"]:
+        if distributed and hasattr(loader.sampler, "set_epoch"):
+            loader.sampler.set_epoch(epoch)
+
         for images, _ in loader:
             step += 1
             images = images.to(device, non_blocking=True)
             noise = torch.randn_like(images)
             loss = meanflow_loss(model, noise, images)
             optimizer.zero_grad(set_to_none=True)
+
             if scaler is not None:
                 scaler.scale(loss).backward()
                 scaler.unscale_(optimizer)
@@ -99,28 +132,40 @@ def train(config, resume=None):
                 loss.backward()
                 nn.utils.clip_grad_norm_(model.parameters(), config["grad_clip"])
                 optimizer.step()
-            
-            if step % config["log_every"] == 0:
+
+            if rank == 0 and step % config["log_every"] == 0:
                 message = f"step={step}/{config['steps']} loss={loss.item():.5f}"
                 print(message)
                 with open(log_path, "a", encoding="utf-8") as f:
                     f.write(message + "\n")
-            if step % config["sample_every"] == 0:
+
+            if rank == 0 and step % config["sample_every"] == 0:
                 save_samples(model, device, output_dir, step, config)
-            if step % config["ckpt_every"] == 0:
-                checkpoint = {"step": step, "model": model.state_dict(), "optimizer": optimizer.state_dict(), "config": config}
+
+            if rank == 0 and step % config["ckpt_every"] == 0:
+                state_dict = model.module.state_dict() if hasattr(model, "module") else model.state_dict()
+                checkpoint = {"step": step, "model": state_dict, "optimizer": optimizer.state_dict(), "config": config}
                 if scaler is not None:
                     checkpoint["scaler"] = scaler.state_dict()
                 torch.save(checkpoint, output_dir / f"ckpt_step_{step}.pt")
+
             if step >= config["steps"]:
                 break
-    final_checkpoint = {"step": step, "model": model.state_dict(), "optimizer": optimizer.state_dict(), "config": config}
-    if scaler is not None:
-        final_checkpoint["scaler"] = scaler.state_dict()
-    
-    torch.save(final_checkpoint, output_dir / "model_final.pt")
-    save_samples(model, device, output_dir, step, config)
-    plot_loss_curve(log_path, output_dir / "loss_curve.png")
+
+        epoch += 1
+
+    if rank == 0:
+        final_state_dict = model.module.state_dict() if hasattr(model, "module") else model.state_dict()
+        final_checkpoint = {"step": step, "model": final_state_dict, "optimizer": optimizer.state_dict(), "config": config}
+        if scaler is not None:
+            final_checkpoint["scaler"] = scaler.state_dict()
+        torch.save(final_checkpoint, output_dir / "model_final.pt")
+        save_samples(model, device, output_dir, step, config)
+        plot_loss_curve(log_path, output_dir / "loss_curve.png")
+
+    if distributed:
+        torch.distributed.barrier()
+        torch.distributed.destroy_process_group()
 
 
 if __name__ == "__main__":

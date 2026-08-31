@@ -48,10 +48,10 @@ def _build_transform(image_size, is_training):
     return transforms.Compose(image_transforms)
 
 
-def build_loader(data_root, image_size, batch_size, workers, split="train"):
+def build_loader(data_root, image_size, batch_size, workers, split="train", distributed=False, rank=0, world_size=1):
     """Build a DataLoader for images stored directly under data_root."""
     image_root = Path(data_root)
-    
+
     if not image_root.is_dir():
         raise FileNotFoundError(f"Expected image directory at {image_root}")
 
@@ -61,10 +61,19 @@ def build_loader(data_root, image_size, batch_size, workers, split="train"):
     if not len(dataset):
         raise FileNotFoundError(f"No image files found under {image_root}.")
 
+    sampler = None
+    shuffle = is_training
+    if is_training and distributed:
+        from torch.utils.data.distributed import DistributedSampler
+
+        sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True, drop_last=True)
+        shuffle = False
+
     return DataLoader(
         dataset,
         batch_size=batch_size,
-        shuffle=is_training,
+        sampler=sampler,
+        shuffle=shuffle,
         num_workers=workers,
         pin_memory=torch.cuda.is_available(),
         persistent_workers=workers > 0,
