@@ -20,7 +20,7 @@ CONFIG = {
     "sample_every": 1000,
     "sample_steps": 50,
     "sample_n": 16,
-    "ckpt_every": 9000,
+    "ckpt_every": 50000,
     "seed": 42,
     "eval_batches": 100,
     "eval_output": "runs/celeba_meanflow/eval.json",

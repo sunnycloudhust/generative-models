@@ -26,10 +26,13 @@ def build_hf_bundle(checkpoint_path: str, output_dir: str = "hf_bundle"):
 
     readme_src = project_root / "huggingface" / "README.md"
     config_src = project_root / "huggingface" / "config.json"
+    demo_src = project_root / "huggingface" / "demo.ipynb"
     if readme_src.exists():
         shutil.copy2(readme_src, dst / "README.md")
     if config_src.exists():
         shutil.copy2(config_src, dst / "config.json")
+    if demo_src.exists():
+        shutil.copy2(demo_src, dst / "demo.ipynb")
 
     shutil.copy2(src, dst / "pytorch_model.bin")
     print(f"Prepared bundle at: {dst}")

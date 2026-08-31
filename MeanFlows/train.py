@@ -10,6 +10,7 @@ from config import CONFIG
 from data import build_loader
 from unet import MeanFlowUNet
 from sample import sample
+from plot import plot_loss_curve
 from torchvision.utils import make_grid, save_image
 
 
@@ -52,7 +53,10 @@ def train(config, resume=None):
     device = torch.device(config.get("device") or ("cuda" if torch.cuda.is_available() else "cpu"))
     output_dir = Path(config["out_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+    log_path = output_dir / "train.log"
+    if log_path.exists():
+        log_path.unlink()
+
     loader = build_loader(config["data_root"], config["image_size"], config["batch_size"], config["workers"])
     model = MeanFlowUNet(base_channels=config["base_channels"]).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
@@ -89,7 +93,10 @@ def train(config, resume=None):
                 optimizer.step()
             
             if step % config["log_every"] == 0:
-                print(f"step={step}/{config['steps']} loss={loss.item():.5f}")
+                message = f"step={step}/{config['steps']} loss={loss.item():.5f}"
+                print(message)
+                with open(log_path, "a", encoding="utf-8") as f:
+                    f.write(message + "\n")
             if step % config["sample_every"] == 0:
                 save_samples(model, device, output_dir, step, config)
             if step % config["ckpt_every"] == 0:
@@ -104,6 +111,7 @@ def train(config, resume=None):
         final_checkpoint["scaler"] = scaler.state_dict()
     torch.save(final_checkpoint, output_dir / "model_final.pt")
     save_samples(model, device, output_dir, step, config)
+    plot_loss_curve(log_path, output_dir / "loss_curve.png")
 
 
 if __name__ == "__main__":
