@@ -15,22 +15,31 @@ from torchvision.utils import make_grid, save_image
 
 
 def meanflow_loss(model, x0, x1):
+    x0 = x0.float()
+    x1 = x1.float()
     batch_size = x1.shape[0]
-    t = torch.rand(batch_size, device=x1.device)
-    r = torch.rand(batch_size, device=x1.device) * t #0<r<t<1
+    t = torch.rand(batch_size, device=x1.device, dtype=x1.dtype)
+    r = torch.rand(batch_size, device=x1.device, dtype=x1.dtype) * t  # 0 < r < t < 1
     x_t = x0 + t[:, None, None, None] * (x1 - x0)
     velocity = x1 - x0
     ones = torch.ones_like(t)
 
-    with torch.no_grad():
-        _, derivative = jvp(
-            lambda state, time: model(state, r, time),
-            (x_t, t),
-            (velocity, ones),
-        )
-    prediction = model(x_t, r, t)
+    # The JVP objective is numerically sensitive under AMP. Keep the derivative path in fp32
+    # so the target tensor stays stable even on CUDA.
+    with torch.autocast(device_type=x1.device.type, enabled=False):
+        with torch.no_grad():
+            _, derivative = jvp(
+                lambda state, time: model(state, r, time),
+                (x_t, t),
+                (velocity, ones),
+            )
+        prediction = model(x_t, r, t)
+
     target = (velocity - (t - r)[:, None, None, None] * derivative).detach()
-    return torch.mean((prediction - target) ** 2)
+    loss = torch.mean((prediction - target) ** 2)
+    if not torch.isfinite(loss):
+        raise FloatingPointError(f"Non-finite MeanFlow loss encountered: {loss.item()}")
+    return loss
 
 
 def save_samples(model, device, output_dir, step, config):
@@ -78,8 +87,7 @@ def train(config, resume=None):
             step += 1
             images = images.to(device, non_blocking=True)
             noise = torch.randn_like(images)
-            with torch.autocast(device_type=device.type, enabled=use_amp):
-                loss = meanflow_loss(model, noise, images)
+            loss = meanflow_loss(model, noise, images)
             optimizer.zero_grad(set_to_none=True)
             if scaler is not None:
                 scaler.scale(loss).backward()
@@ -109,6 +117,7 @@ def train(config, resume=None):
     final_checkpoint = {"step": step, "model": model.state_dict(), "optimizer": optimizer.state_dict(), "config": config}
     if scaler is not None:
         final_checkpoint["scaler"] = scaler.state_dict()
+    
     torch.save(final_checkpoint, output_dir / "model_final.pt")
     save_samples(model, device, output_dir, step, config)
     plot_loss_curve(log_path, output_dir / "loss_curve.png")
