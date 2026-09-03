@@ -9,6 +9,8 @@ CONFIG = {
     "distributed": True,
     "checkpoint": "runs/celeba_meanflow/model_final.pt",
     "sample_output": "runs/celeba_meanflow/samples.png",
+    "trajectory_output": "runs/celeba_meanflow/trajectory.png",
+    "trajectory_columns": 6,
     "image_size": 64,
     "batch_size": 10,
     "base_channels": 192,
