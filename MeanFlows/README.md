@@ -27,6 +27,13 @@ Resume by setting `CONFIG["resume"]` to a checkpoint path.
 ## Sample
 
 Set `checkpoint`, `sample_output`, and `sample_steps` in `config.py`, then run `python sample.py`.
+The command also saves `trajectory.png`, a six-frame view of one sample evolving from
+Gaussian noise to the generated face. Add the generated image below after sampling:
+
+![MeanFlow trajectory from noise to generated image](runs/celeba_meanflow/trajectory.png)
+
+The columns show the same sample at evenly spaced integration times. The first column
+is the initial noise and the last column is the final generated image.
 
 ## Evaluate
 
